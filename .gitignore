@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.zip
+
+# 환경
+.env
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# 임시 파일
+dummy_*.json
+*.txt
+!requirements.txt
+rl_engine_original*
+rl_unified_example*
+import\ requests.py
+test_api.py
+ai_port_demo.zip
