@@ -1,0 +1,22 @@
+{
+  "1I9MT": {
+    "code": "1I9MT",
+    "passenger_phase": 0,
+    "time_remaining": 50,
+    "flight": "TW532",
+    "picker_loc": "장기 주차장 (도보 20분)",
+    "updated_at": 1774613437.522222,
+    "created_at": 1774613015.131688,
+    "arrived_at": null
+  },
+  "2JKRH": {
+    "code": "2JKRH",
+    "passenger_phase": -1,
+    "time_remaining": 140,
+    "flight": "KE484",
+    "picker_loc": "장기 주차장 (도보 20분)",
+    "updated_at": 1774614600.052811,
+    "created_at": 1774614597.589176,
+    "arrived_at": null
+  }
+}

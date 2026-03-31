@@ -1,0 +1,95 @@
+{
+  "response": {
+    "header": {
+      "resultCode": "00",
+      "resultMsg": "NORMAL SERVICE."
+    },
+    "body": {
+      "numOfRows": 5,
+      "pageNo": 1,
+      "totalCount": 1189,
+      "items": [
+        {
+          "sn": "3289",
+          "lcategorynm": "식・음료",
+          "mcategorynm": "스낵/카페/디저트 ",
+          "scategorynm": null,
+          "facilitynm": "% 아라비카",
+          "facilityitem": "교토라테, 카페라테, 스페니시라테",
+          "lcnm": "제2여객터미널 3층 면세지역 209번 게이트 부근",
+          "terminalid": "P03",
+          "servicetime": "06:00 ~ 22:00",
+          "tel": "032-743-8584",
+          "lcduty": "Y",
+          "floorinfo": "F3",
+          "arrordep": "D",
+          "goods": "교토라테, 카페라테, 스페니시라테"
+        },
+        {
+          "sn": "2030",
+          "lcategorynm": "공항즐기기",
+          "mcategorynm": "예술품",
+          "scategorynm": null,
+          "facilitynm": "15 Benches (김소산)",
+          "facilityitem": "-",
+          "lcnm": "제1여객터미널 한국문화거리 4F 중앙부",
+          "terminalid": "P01",
+          "servicetime": "00:00 ~ 00:00",
+          "tel": "-",
+          "lcduty": "N",
+          "floorinfo": "F4",
+          "arrordep": "D",
+          "goods": "-"
+        },
+        {
+          "sn": "3124",
+          "lcategorynm": null,
+          "mcategorynm": null,
+          "scategorynm": null,
+          "facilitynm": "1층 10번 입구",
+          "facilityitem": "",
+          "lcnm": "",
+          "terminalid": "P01",
+          "servicetime": null,
+          "tel": "",
+          "lcduty": "N",
+          "floorinfo": "F1",
+          "arrordep": "A",
+          "goods": ""
+        },
+        {
+          "sn": "3152",
+          "lcategorynm": null,
+          "mcategorynm": null,
+          "scategorynm": null,
+          "facilitynm": "1층 10번 입구",
+          "facilityitem": "",
+          "lcnm": "",
+          "terminalid": "P03",
+          "servicetime": null,
+          "tel": "",
+          "lcduty": "N",
+          "floorinfo": "F1",
+          "arrordep": "A",
+          "goods": ""
+        },
+        {
+          "sn": "3125",
+          "lcategorynm": null,
+          "mcategorynm": null,
+          "scategorynm": null,
+          "facilitynm": "1층 11번 입구",
+          "facilityitem": "",
+          "lcnm": "",
+          "terminalid": "P01",
+          "servicetime": null,
+          "tel": "",
+          "lcduty": "N",
+          "floorinfo": "F1",
+          "arrordep": "A",
+          "goods": ""
+        }
+      ]
+    }
+  }
+}

@@ -33,7 +33,7 @@ def get_arrival_flights():
     }
     
     try:
-        response = requests.get(URL, params=params, timeout=10)
+        response = requests.get(URL, params=params, timeout=30)
         response.raise_for_status()
         
         data = response.json()

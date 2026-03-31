@@ -1,4 +1,8 @@
 streamlit
 pandas
-numpy
 requests
+pydeck
+streamlit-geolocation
+firebase-admin
+numpy
+python-dotenv

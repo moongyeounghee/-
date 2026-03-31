@@ -1,5 +1,7 @@
 import math
 import random
+import pickle
+import os
 import numpy as np
 
 # --- 통합 행동 공간 (Action Space) 정의 ---
@@ -32,10 +34,12 @@ class AIPortRLEngine:
         self.mode = mode.upper()
         
         # RL 공통 하이퍼파라미터
-        self.q_table = {}
         self.gamma = 0.98 if self.mode == "DEPARTURE" else 0.95
         self.alpha = 0.05 if self.mode == "DEPARTURE" else 0.1
-        self.epsilon = 0.1
+        self.epsilon = 0.0  # 추론 시에는 탐색 끄기
+
+        # 사전학습된 Q-테이블 로드
+        self.q_table = self._load_q_table()
         
         # 출국 모드(DEPARTURE) 전용 초기화
         if self.mode == "DEPARTURE":
@@ -44,6 +48,36 @@ class AIPortRLEngine:
                 self.m_index_std = 1.34  # 남성 평균 m/s
             else:
                 self.m_index_std = 1.27  # 여성 평균 m/s
+
+    # ----------------------------------------------------
+    # 0. Q-테이블 로드/저장
+    # ----------------------------------------------------
+    def _load_q_table(self, path="q_table.pkl"):
+        """사전학습된 Q-테이블을 로드. 없으면 빈 테이블 반환."""
+        if os.path.exists(path):
+            try:
+                with open(path, "rb") as f:
+                    data = pickle.load(f)
+                key = "departure" if self.mode == "DEPARTURE" else "arrival"
+                table = data.get(key, {})
+                return table
+            except Exception:
+                pass
+        return {}
+
+    def save_q_table(self, path="q_table.pkl"):
+        """현재 Q-테이블을 저장."""
+        existing = {}
+        if os.path.exists(path):
+            try:
+                with open(path, "rb") as f:
+                    existing = pickle.load(f)
+            except Exception:
+                pass
+        key = "departure" if self.mode == "DEPARTURE" else "arrival"
+        existing[key] = self.q_table
+        with open(path, "wb") as f:
+            pickle.dump(existing, f)
 
     # ----------------------------------------------------
     # 1. State (상태 변환기)
@@ -133,11 +167,30 @@ class AIPortRLEngine:
         current_epsilon = 0.0 if time_left <= 30 else self.epsilon
         if state not in self.q_table:
             self.q_table[state] = [0.0, 0.0, 0.0, 0.0]
-            
+
+        q_vals = self.q_table[state]
+
+        # ★ 미학습 상태(Q값 전부 0)이면 실제 항공 기준 기반 fallback
+        # | 국제선 기준
+        # | 60분~  : 체크인 마감 전  → 쇼핑 가능, 게이트 기준으로 이동 준비
+        # | 30~60분 : 게이트 마감 30분전 → 슬슬 이동 시작
+        # | 15~30분 : 게이트 마감 15분전 → 즉시 이동
+        # |   ~15분 : 긴급 (탑승 불가 위험)  → 우회 구간 피해 즉시 달려가세요
+        if max(q_vals) == 0.0 and min(q_vals) == 0.0:
+            if time_left >= 60:
+                return DEP_ACTION_0   # 면세점/라운지 권장 (취타 큰다 여유)
+            elif time_left >= 30:
+                return DEP_ACTION_1   # 전략적 대기 후 이동 (게이트 마감 30분전)
+            elif time_left >= 15:
+                return DEP_ACTION_2   # 즉시 이동 (게이트 마감 15분전)
+            else:
+                return DEP_ACTION_3   # 긴급: 혼잡 우회하며 바로 달려가세요!
+
+
         if random.uniform(0, 1) < current_epsilon:
             return random.choice([DEP_ACTION_0, DEP_ACTION_1, DEP_ACTION_2, DEP_ACTION_3])
         else:
-            return int(np.argmax(self.q_table[state]))
+            return int(np.argmax(q_vals))
 
     def _select_arrival_action(self, state):
         p_phase, t_rem, dist = state

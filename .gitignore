@@ -31,3 +31,7 @@ rl_unified_example*
 import\ requests.py
 test_api.py
 ai_port_demo.zip
+
+# Large ML data files
+dynamic_q_table.pkl
+dynamic_env_data.pkl
