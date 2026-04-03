@@ -197,6 +197,11 @@ def is_open_now(hours_str: str) -> bool | None:
         close_mins = close_h * 60 + close_m
         if close_mins == 0:  # 00:00 = 자정 마감
             close_mins = 24 * 60
-        return open_mins <= now_mins <= close_mins
+            
+        if open_mins <= close_mins:
+            return open_mins <= now_mins <= close_mins
+        else:
+            # 새벽을 넘어가는 영업시간 (예: 05:30 ~ 01:30)
+            return now_mins >= open_mins or now_mins <= close_mins
     except Exception:
         return None
