@@ -1210,6 +1210,7 @@ div[data-testid="stVerticalBlock"] > div > div[data-testid="stVerticalBlockBorde
     /* 원래의 창백한 Carto 맵 색상을 육지는 싱그럽게, 바다는 짙고 푸르게 펌핑! */
     filter: hue-rotate(-15deg) saturate(4.0) brightness(0.95) contrast(1.05) !important;
     border-radius: 12px !important;
+    height: 320px !important; /* 레이더 높이 축소 최적화 */
     overflow: hidden !important;
     box-shadow: 0 4px 20px rgba(14, 165, 233, 0.15) !important;
     transition: filter 0.5s ease;
@@ -1812,9 +1813,9 @@ elif st.session_state.mode == "ARRIVAL":
                     st.markdown(f"<div style='font-size:0.95rem; color:#60b8ff; margin-top:0.4rem; margin-bottom:0.3rem;'><b>📍 실시간 위성 레이더 (고도: {alt_text}, 속도: {vel_text})</b></div>", unsafe_allow_html=True)
                 with cr2:
                     if is_live:
-                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#ff4b4b; padding-top:0.4rem;'><b>🔴 LIVE 추적 중</b></div>", unsafe_allow_html=True)
+                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#ff4b4b; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🔴 LIVE 추적 중</b></div>", unsafe_allow_html=True)
                     else:
-                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#E6A800; padding-top:0.4rem;'><b>🟡 ADS-B 음영 (AI 추정 위치)</b></div>", unsafe_allow_html=True)
+                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#E6A800; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🟡 ADS-B 음영 (AI 추정 위치)</b></div>", unsafe_allow_html=True)
                     
                 view_state = pdk.ViewState(
                     latitude=lat,
@@ -1830,6 +1831,10 @@ elif st.session_state.mode == "ARRIVAL":
                     get_radius=30000 if safe_mins > 60 else 15000,
                 )
                 st.pydeck_chart(pdk.Deck(map_style='road', layers=[layer], initial_view_state=view_state))
+                
+                # st.fragment 내부 버튼: 누르면 이 영역만 새로고침됨!
+                if st.button("🔄 실시간 레이더 위치 새로고침", use_container_width=True, key="btn_radar_refresh"):
+                    pass # 버튼 행동 자체는 st.fragment 재실행 트리거로 작용
                 st.markdown("<br>", unsafe_allow_html=True)
 
             # 권역 밖이라도 무조건 렌더링 (AI 위치 시뮬레이터가 대신 표시해줌)
@@ -1923,7 +1928,7 @@ elif st.session_state.mode == "ARRIVAL":
             if meet_gap > 60:
                 st.success(f"🟢 자택 실내에서 편하게 대기하셔도 좋습니다. 출발 권장 시간까지 약 {meet_gap}분 남았습니다.")
             elif meet_gap > 10:
-                st.warning(f"🟡 교통 체증이 있을당 수 있으므로, 지금 슬슬 공항 게이트 방향으로 이동을 준비해 주세요!")
+                st.warning(f"🟡 교통 체증이 있을 수 있으므로, 지금 슬슬 공항 게이트 방향으로 이동을 준비해 주세요!")
             else:
                 st.error("🔴 입국장 게이트 앞(1층)으로 지금 즉시 이동하여 대기하세요!")
                 
