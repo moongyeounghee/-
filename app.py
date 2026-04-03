@@ -1762,42 +1762,111 @@ elif st.session_state.mode == "ARRIVAL":
                     if alt_m: alt_text = f"{int(alt_m)}m"
                     if vel_ms: vel_text = f"{int(vel_ms * 3.6)}km/h"
                 else:
-                    # 라이브 위치 아니면 렌더링 안 함 (예상 위치 끄기)
-                    lat = 37.46
-                    lon = 126.44
-                    alt_text = "조회 불가"
-                    vel_text = "조회 불가"
+                    # 대권항로(Great Circle Route) 기반 예상 위치 계산
+                    CITY_COORDS = {
+                        "도쿄": (35.76, 140.38), "나리타": (35.76, 140.38), "하네다": (35.55, 139.78),
+                        "오사카": (34.43, 135.23), "후쿠오카": (33.58, 130.45), "삿포로": (42.77, 141.69),
+                        "타이베이": (25.07, 121.23), "방콕": (13.68, 100.74), "싱가포르": (1.36, 103.99),
+                        "홍콩": (22.30, 113.91), "마카오": (22.14, 113.59), "상하이": (31.14, 121.80),
+                        "베이징": (40.08, 116.59), "광저우": (23.39, 113.30), "선전": (22.63, 113.81),
+                        "다낭": (16.05, 108.19), "호치민": (10.81, 106.66), "하노이": (21.22, 105.80),
+                        "쿠알라룸푸르": (2.74, 101.70), "자카르타": (-6.13, 106.65), "발리": (-8.75, 115.17),
+                        "마닐라": (14.50, 121.01), "세부": (10.30, 123.97), "괌": (13.48, 144.79),
+                        "사이판": (15.11, 145.72), "하와이": (21.32, -157.92), "로스앤젤레스": (33.94, -118.40),
+                        "샌프란시스코": (37.62, -122.38), "뉴욕": (40.64, -73.77), "런던": (51.47, -0.45),
+                        "파리": (49.00, 2.54), "프랑크푸르트": (50.03, 8.57), "암스테르담": (52.31, 4.76),
+                        "취리히": (47.46, 8.55), "로마": (41.80, 12.25), "이스탄불": (40.97, 28.82),
+                        "두바이": (25.25, 55.36), "아부다비": (24.43, 54.65), "도하": (25.27, 51.60),
+                        "뭄바이": (19.09, 72.87), "델리": (28.56, 77.10), "시드니": (-33.93, 151.17),
+                        "멜버른": (-37.67, 144.84), "오클랜드": (-37.00, 174.78),
+                        "지난": (36.85, 117.21), "타이저우": (28.56, 121.42), "청두": (30.57, 103.94),
+                        "청다오": (36.27, 120.37), "선양": (41.73, 123.49), "하얼빈": (45.62, 126.25),
+                        "우루무치": (43.91, 87.47), "쿤밍": (24.99, 102.74), "시안": (34.26, 108.75),
+                        "아디스아바바": (8.97, 38.79), "나이로비": (-1.32, 36.92),
+                    }
+                    
+                    # 출발지 이름에서 도시 좌표 찾기
+                    origin_lat, origin_lon = None, None
+                    if origin_name:
+                        for city, coords in CITY_COORDS.items():
+                            if city in str(origin_name):
+                                origin_lat, origin_lon = coords
+                                break
+                    
+                    if origin_lat is not None:
+                        # 대권항로 보간: 구면 선형 보간(Slerp)
+                        INCHEON_LAT, INCHEON_LON = 37.46, 126.44
+                        
+                        def great_circle_point(lat1, lon1, lat2, lon2, t):
+                            """t=0이면 출발지, t=1이면 목적지 (대권항로 보간)"""
+                            import math
+                            lat1, lon1 = math.radians(lat1), math.radians(lon1)
+                            lat2, lon2 = math.radians(lat2), math.radians(lon2)
+                            d = 2 * math.asin(math.sqrt(
+                                math.sin((lat2-lat1)/2)**2 +
+                                math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2
+                            ))
+                            if d < 1e-10: return math.degrees(lat1), math.degrees(lon1)
+                            A = math.sin((1-t)*d) / math.sin(d)
+                            B = math.sin(t*d) / math.sin(d)
+                            x = A*math.cos(lat1)*math.cos(lon1) + B*math.cos(lat2)*math.cos(lon2)
+                            y = A*math.cos(lat1)*math.sin(lon1) + B*math.cos(lat2)*math.sin(lon2)
+                            z = A*math.sin(lat1) + B*math.sin(lat2)
+                            return math.degrees(math.atan2(z, math.sqrt(x**2+y**2))), math.degrees(math.atan2(y, x))
+                        
+                        # 총 비행시간 추정 (대권거리 기반)
+                        dist_deg = math.sqrt((INCHEON_LAT-origin_lat)**2 + (INCHEON_LON-origin_lon)**2)
+                        dist_km = dist_deg * 111
+                        est_total_mins = int(dist_km / 14)  # 평균 840km/h
+                        est_total_mins = max(safe_mins + 5, est_total_mins)
+                        
+                        progress = 1.0 - (safe_mins / est_total_mins)
+                        progress = max(0.02, min(0.98, progress))
+                        
+                        lat, lon = great_circle_point(origin_lat, origin_lon, INCHEON_LAT, INCHEON_LON, progress)
+                        
+                        # 고도 추정: 이륙/순항/착륙 포물선
+                        phase = abs(progress - 0.5) * 2  # 0=중간, 1=양끝
+                        est_alt_m = int(11000 * (1 - phase**2))
+                        alt_text = f"{est_alt_m:,}m (추정)"
+                        vel_text = "약 850km/h (추정)"
+                    else:
+                        lat, lon = 37.46, 126.44
+                        alt_text = "추정 불가"
+                        vel_text = "추정 불가"
+                        origin_lat = None
                 
                 cr1, cr2 = st.columns([2, 1])
                 with cr1:
-                    st.markdown(f"<div style='font-size:0.95rem; color:#60b8ff; margin-top:0.4rem; margin-bottom:0.3rem;'><b>📍 실시간 위성 레이더 (고도: {alt_text}, 속도: {vel_text})</b></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:0.95rem; color:#60b8ff; margin-top:0.4rem; margin-bottom:0.3rem;'><b>📍 위성 레이더 (고도: {alt_text}, 속도: {vel_text})</b></div>", unsafe_allow_html=True)
                 with cr2:
                     if is_live:
                         st.markdown("<div style='text-align:right; font-size:0.9rem; color:#ff4b4b; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🔴 LIVE 추적 중</b></div>", unsafe_allow_html=True)
+                    elif not is_live and 'origin_lat' in dir() and origin_lat is not None:
+                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#4A90E2; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🔵 항로 추정 중</b></div>", unsafe_allow_html=True)
                     else:
-                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#A0AEC0; padding-top:0.4rem; margin-bottom:0.5rem;'><b>⚪ 레이더 신호 미수신</b></div>", unsafe_allow_html=True)
+                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#A0AEC0; padding-top:0.4rem; margin-bottom:0.5rem;'><b>⚪ 신호 없음</b></div>", unsafe_allow_html=True)
                     
                 view_state = pdk.ViewState(
                     latitude=lat,
                     longitude=lon,
-                    zoom=4 if is_live else 6,
+                    zoom=4 if safe_mins > 60 else 6,
                     pitch=40
                 )
                 
-                layers = []
-                if is_live:
-                    map_df = pd.DataFrame([{"lat": lat, "lon": lon}])
-                    layers.append(pdk.Layer(
-                        "ScatterplotLayer",
-                        data=map_df,
-                        get_position="[lon, lat]",
-                        get_fill_color="[220, 20, 60, 255]",
-                        get_radius=30000 if safe_mins > 60 else 15000,
-                    ))
+                map_df = pd.DataFrame([{"lat": lat, "lon": lon}])
+                dot_color = "[220, 20, 60, 255]" if is_live else "[74, 144, 226, 200]"
+                layers = [pdk.Layer(
+                    "ScatterplotLayer",
+                    data=map_df,
+                    get_position="[lon, lat]",
+                    get_fill_color=dot_color,
+                    get_radius=30000 if safe_mins > 60 else 15000,
+                )]
                 
                 if not is_live:
-                    st.info("📡 해양 구간 비행 중 — 육지 상공 진입 시 자동 추적됩니다.")
-
+                    st.info("📡 해양 구간 비행 중 — 대권항로 기반 예상 위치입니다.")
+                
                 st.pydeck_chart(pdk.Deck(map_style='https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json', layers=layers, initial_view_state=view_state))
                 
                 # st.fragment 내부 버튼: 누르면 이 영역만 새로고침됨!
