@@ -1751,6 +1751,8 @@ elif st.session_state.mode == "ARRIVAL":
                 alt_text = "알 수 없음"
                 vel_text = "알 수 없음"
                 
+                safe_mins = max(0, mins_left) if mins_left else 60
+                
                 if current_f and current_f.get("lat") and current_f.get("lon"):
                     is_live = True
                     lat = current_f["lat"]
@@ -1765,7 +1767,6 @@ elif st.session_state.mode == "ARRIVAL":
                     lon = 126.44
                     alt_text = "조회 불가"
                     vel_text = "조회 불가"
-                    safe_mins = 60
                 
                 cr1, cr2 = st.columns([2, 1])
                 with cr1:
