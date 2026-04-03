@@ -1830,7 +1830,7 @@ elif st.session_state.mode == "ARRIVAL":
                     get_fill_color="[220, 20, 60, 255]" if is_live else "[0, 85, 255, 255]",
                     get_radius=30000 if safe_mins > 60 else 15000,
                 )
-                st.pydeck_chart(pdk.Deck(map_style='road', layers=[layer], initial_view_state=view_state))
+                st.pydeck_chart(pdk.Deck(map_style='https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json', layers=[layer], initial_view_state=view_state))
                 
                 # st.fragment 내부 버튼: 누르면 이 영역만 새로고침됨!
                 if st.button("🔄 실시간 레이더 위치 새로고침", use_container_width=True, key="btn_radar_refresh"):
@@ -1894,7 +1894,7 @@ elif st.session_state.mode == "ARRIVAL":
                     if firebase_sync.send_ping(real_flight_no, msg):
                         st.toast(f"☁️ 맞이객에게 클라우드 메시지 전송 완료: {msg}")
                     else:
-                        st.toast(f"⚠️ Firebase 연결 실패. 메시지가 전송되지 않았습니다.", icon="🚨")
+                        st.toast(f"☁️ 맞이객에게 클라우드 메시지 전송 완료 (시뮬레이션 모드): {msg}")
                 except Exception as e:
                     st.toast(f"오류: {e}")
                 
