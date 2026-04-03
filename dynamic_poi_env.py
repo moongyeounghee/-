@@ -20,7 +20,7 @@ def calc_travel_time(x1, y1, x2, y2, t1="T1", t2="T1"):
     
     # 셔틀 트레인 (T1 <-> CONCOURSE 구간 이동 시 +15분 고정 패널티)
     if t1 != t2 and ("CONCOURSE" in [t1, t2]):
-        time_min += 15.0
+        time_min += 10.0
         
     return round(time_min, 1)
 

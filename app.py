@@ -3,7 +3,7 @@ import pandas as pd
 import time
 import random
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from departure_congestion_api import get_departure_congestion
 from departure_flight_api import get_departure_flights
@@ -518,13 +518,19 @@ def time_to_minutes(t_str):
 
 def minutes_diff(target_str):
     """target HH:MM 까지 남은 분수 (현재시간 기준, 초 단위 반올림 포함)"""
-    now = datetime.now()
+    kst = timezone(timedelta(hours=9))
+    now = datetime.now(kst)
     # 초(second) 단위까지 반영하여 반올림해 ±1분 오차 제거
     now_total_mins = now.hour * 60 + now.minute + now.second / 60.0
     target_mins = time_to_minutes(target_str)
     if target_mins is None:
         return None
     diff = target_mins - now_total_mins
+    
+    # 시간 차이가 음수면 다음날로 간주 (자정 넘어가는 비행기)
+    if diff < -120:
+        diff += 24 * 60
+        
     return round(diff)  # 반올림으로 정수 분 반환
 
 def get_urgency(mins_left):
@@ -570,7 +576,7 @@ def _save_share_db(db: dict):
 
 def _purge_expired(db: dict) -> dict:
     """만료된 코드 제거 후 반환"""
-    now_ts = datetime.now().timestamp()
+    now_ts = datetime.now(timezone(timedelta(hours=9))).timestamp()
     valid = {}
     for code, d in db.items():
         created = d.get("created_at", 0)
@@ -588,7 +594,7 @@ def upsert_share_code(code: str, p_phase: int, time_remaining: int,
                       flight: str, picker_loc: str):
     """코드 생성/갱신. p_phase==3(출구) 첫 감지 시 arrived_at 기록."""
     db = _purge_expired(_load_share_db())
-    now_ts = datetime.now().timestamp()
+    now_ts = datetime.now(timezone(timedelta(hours=9))).timestamp()
     existing = db.get(code, {})
     arrived_at = existing.get("arrived_at", None)
     if p_phase == 3 and arrived_at is None:
@@ -867,7 +873,7 @@ elif st.session_state.mode == "DEPARTURE":
     if search_flight:
         flight_match = df_flights[df_flights["편명"].str.upper() == search_flight.upper().strip()]
     else:
-        now_hm = datetime.now().strftime("%H:%M")
+        now_hm = datetime.now(timezone(timedelta(hours=9))).strftime("%H:%M")
         df_valid = df_flights[df_flights["예정시간"] != "N/A"]
         df_upcoming = df_valid[df_valid["예정시간"] >= now_hm]
         flight_match = df_upcoming.head(1) if not df_upcoming.empty else df_flights.head(1)
@@ -1272,14 +1278,14 @@ div[data-testid="stVerticalBlock"] > div > div[data-testid="stVerticalBlockBorde
                     badges = "".join([
                         f"<span style='display:inline-block;background:rgba(192,132,252,0.15);border:1px solid"
                         f" rgba(192,132,252,0.3);border-radius:20px;padding:0.2rem 0.7rem;margin:0.2rem;"
-                        f"font-size:0.8rem;color:#e9d5ff;'>#{i+1} {p['name']}</span>"
+                        f"font-size:0.8rem;color:#6B21A8;font-weight:600;'>#{i+1} {p['name']}</span>"
                         for i, p in enumerate(top3)
                     ])
                     st.markdown(f"""
                     <div style='background:linear-gradient(135deg,rgba(192,132,252,0.12),rgba(96,184,255,0.12));
                       border:1px solid rgba(192,132,252,0.35);border-radius:14px;
                       padding:0.9rem 1.2rem;margin-bottom:1rem;'>
-                      <div style='font-size:0.8rem;color:#c084fc;font-weight:700;margin-bottom:0.5rem;'>
+                      <div style='font-size:0.85rem;color:#7E22CE;font-weight:800;margin-bottom:0.5rem;'>
                         ✨ AI 추천 — 지금 가기 가장 좋은 매장 TOP {len(top3)}
                       </div>{badges}
                     </div>""", unsafe_allow_html=True)
@@ -1431,7 +1437,7 @@ div[data-testid="stVerticalBlock"] > div > div[data-testid="stVerticalBlockBorde
             st.markdown("<h3 style='color:#2D3748; font-weight:800; margin-top:0.2rem; margin-bottom:1rem;'>⏱️ 이동 타이밍 카운트다운</h3>", unsafe_allow_html=True)
 
             move_in_mins = max(0, mins_left - loc_walk_time - 15)  # 15분 여유
-            now_dt = datetime.now()
+            now_dt = datetime.now(timezone(timedelta(hours=9)))
             move_time_dt = now_dt + timedelta(minutes=move_in_mins)
 
             st.metric("지금 이동 출발 권장 시각", move_time_dt.strftime("%H:%M"))
@@ -1498,7 +1504,7 @@ div[data-testid="stVerticalBlock"] > div > div[data-testid="stVerticalBlockBorde
 
     st.markdown(f"""
     <div style='text-align:right; color:#A0AEC0; font-size:0.75rem; margin-top:1rem;'>
-      마지막 업데이트: {datetime.now().strftime("%H:%M:%S")} · 공공데이터포털 실시간
+      마지막 업데이트: {datetime.now(timezone(timedelta(hours=9))).strftime("%H:%M:%S")} · 공공데이터포털 실시간
     </div>
     """, unsafe_allow_html=True)
 
@@ -1893,7 +1899,7 @@ elif st.session_state.mode == "ARRIVAL":
         else: # 맞이객 (Greeter 뷰)
             
             st.markdown("<h3 style='color:#2D3748; font-weight:800; margin-top:1.5rem; margin-bottom:0.5rem;'>🤝 맞이객 전용 대시보드</h3>", unsafe_allow_html=True)
-            meet_time_dt = datetime.now() + timedelta(minutes=time_remaining)
+            meet_time_dt = datetime.now(timezone(timedelta(hours=9))) + timedelta(minutes=time_remaining)
             
             # --- 오프라인 핑 클라우드 수신 로직 ---
             try:
@@ -2091,9 +2097,9 @@ elif st.session_state.mode == "ARRIVAL":
             share_code = f"{arr_flight['편명']}-{hash_tag}"
 
             # 만료 시간 로직: 착륙 전이면 24시간, 착륙/수속 시작됐으면 1시간 뒤 만료
-            _expire_dt = datetime.now() + timedelta(hours=24)
+            _expire_dt = datetime.now(timezone(timedelta(hours=9))) + timedelta(hours=24)
             if p_phase >= 0: 
-                _expire_dt = datetime.now() + timedelta(hours=1)
+                _expire_dt = datetime.now(timezone(timedelta(hours=9))) + timedelta(hours=1)
             _expire_str = _expire_dt.strftime("%m월 %d일 %H:%M") + " 만료 예정"
 
             st.markdown(f"""
@@ -2110,6 +2116,6 @@ elif st.session_state.mode == "ARRIVAL":
 
     st.markdown(f"""
     <div style='text-align:right; color:#A0AEC0; font-size:0.75rem; margin-top:1rem;'>
-      마지막 업데이트: {datetime.now().strftime("%H:%M:%S")} · 공공데이터포털 실시간
+      마지막 업데이트: {datetime.now(timezone(timedelta(hours=9))).strftime("%H:%M:%S")} · 공공데이터포털 실시간
     </div>
     """, unsafe_allow_html=True)

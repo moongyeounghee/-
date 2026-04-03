@@ -5,7 +5,9 @@
 import requests
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+KST = timezone(timedelta(hours=9))
 
 SERVICE_KEY = "f057b51365f28ead992af0e533cd91df9f3a469051f42f2c1ae684426c843f39"
 BASE_URL = "http://apis.data.go.kr/B551177/FacilitiesInformation/getFacilitesInfo"
@@ -92,7 +94,7 @@ def _load_cache() -> list | None:
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
             cache = json.load(f)
         cached_at = datetime.fromisoformat(cache.get("cached_at", "2000-01-01"))
-        if datetime.now() - cached_at < timedelta(hours=CACHE_TTL_HOURS):
+        if datetime.now(KST).replace(tzinfo=None) - cached_at.replace(tzinfo=None) < timedelta(hours=CACHE_TTL_HOURS):
             return cache.get("items", [])
     except Exception:
         pass
@@ -102,7 +104,7 @@ def _load_cache() -> list | None:
 def _save_cache(items: list):
     try:
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
-            json.dump({"cached_at": datetime.now().isoformat(), "items": items}, f, ensure_ascii=False, indent=2)
+            json.dump({"cached_at": datetime.now(KST).isoformat(), "items": items}, f, ensure_ascii=False, indent=2)
     except Exception:
         pass
 
@@ -189,7 +191,7 @@ def is_open_now(hours_str: str) -> bool | None:
         parts = hours_str.replace(" ", "").split("~")
         open_h, open_m = map(int, parts[0].split(":"))
         close_h, close_m = map(int, parts[1].split(":"))
-        now = datetime.now()
+        now = datetime.now(KST)
         now_mins = now.hour * 60 + now.minute
         open_mins = open_h * 60 + open_m
         close_mins = close_h * 60 + close_m
