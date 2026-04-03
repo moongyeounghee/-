@@ -62,9 +62,12 @@ def get_arrival_flights():
             exit_no = v.get("exitNumber", "미정")
             terminal = v.get("terminalId", "N/A")
             remark = v.get("remark", "")
+            master_id = str(v.get("masterFlightId", "")).strip()
+            actual_flight = master_id if master_id else flight_id
             
             parsed_data.append({
                 "편명": flight_id,
+                "실제운항편명": actual_flight,
                 "항공사": airline,
                 "출발지": airport,
                 "예정시간": sch_time,

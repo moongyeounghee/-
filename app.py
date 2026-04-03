@@ -1806,7 +1806,8 @@ elif st.session_state.mode == "ARRIVAL":
                 st.markdown("<br>", unsafe_allow_html=True)
 
             # 권역 밖이라도 무조건 렌더링 (AI 위치 시뮬레이터가 대신 표시해줌)
-            render_radar_fragment(arr_flight["편명"], arr_flight["출발지"], mins_until_arr)
+            actual_callsign = arr_flight.get("실제운항편명", arr_flight["편명"])
+            render_radar_fragment(actual_callsign, arr_flight["출발지"], mins_until_arr)
 
 
 
