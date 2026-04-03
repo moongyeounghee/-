@@ -33,7 +33,7 @@ taxi_api.get_taxi_status = st.cache_data(ttl=60)(taxi_api.get_taxi_status)
 railroad_api.get_railroad_info = st.cache_data(ttl=60)(railroad_api.get_railroad_info)
 facilities_api.load_all_facilities = st.cache_data(ttl=60)(facilities_api.load_all_facilities)
 
-@st.cache_data
+@st.cache_resource
 def load_rl_models():
     import pickle, os
     q_table, env_data = None, None
@@ -1735,7 +1735,7 @@ elif st.session_state.mode == "ARRIVAL":
             st.markdown("<br>", unsafe_allow_html=True)
             
             # ── (OpenSky) 실시간 항공기 레이더 맵 ──
-            @st.fragment(run_every="10s")
+            @st.fragment
             def render_radar_fragment(flight_callsign, origin_name, mins_left):
                 import opensky_api
                 import pandas as pd
