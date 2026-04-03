@@ -93,6 +93,7 @@ IATA_TO_ICAO = {
     # 중국
     "CA": "CCA", "MU": "CES", "CZ": "CSN", "HU": "CHH",
     "3U": "CSC", "ZH": "CSZ", "9C": "CQH", "HO": "DKH",
+    "SC": "CDG", "FM": "CSH", "ZH": "SZX", "HX": "CRK",
     # 유럽
     "LH": "DLH", "AF": "AFR", "KL": "KLM", "BA": "BAW",
     "EK": "UAE", "QR": "QTR", "EY": "ETD", "TK": "THY",
