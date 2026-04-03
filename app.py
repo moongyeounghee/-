@@ -1622,7 +1622,10 @@ elif st.session_state.mode == "ARRIVAL":
         st.stop()
 
     arr_flight = arr_match.iloc[0]
-    arr_status = arr_flight.get("상태", "") or ""
+    
+    # 상태값이 비어있거나 NaN(float)일 경우의 안전한 캐스팅
+    raw_status = arr_flight.get("상태", "")
+    arr_status = str(raw_status) if pd.notna(raw_status) else ""
 
     # 현재 단계 매핑
     # p_phase: -1 = 아직 비행중(착륙 전), 0 = 착륙, 1 = 입국심사, 2 = 수하물, 3 = 출구
