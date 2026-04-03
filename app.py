@@ -1796,7 +1796,7 @@ elif st.session_state.mode == "ARRIVAL":
                     ))
                 
                 if not is_live:
-                    st.info("ℹ️ 현재 실시간 위성(ADS-B) 망에 위치가 잡히지 않는 특수 비행기입니다. (예: 공동운항 비행기, 해양 음영구역 등)")
+                    st.info("📡 해양 구간 비행 중 — 육지 상공 진입 시 자동 추적됩니다.")
 
                 st.pydeck_chart(pdk.Deck(map_style='https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json', layers=layers, initial_view_state=view_state))
                 
