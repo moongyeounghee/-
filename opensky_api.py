@@ -19,7 +19,7 @@ BBOX = {
 def _fetch_opensky_data():
     url = "https://opensky-network.org/api/states/all"
     try:
-        resp = requests.get(url, params=BBOX, auth=(OPENSKY_USERNAME, OPENSKY_PASSWORD), timeout=10)
+        resp = requests.get(url, auth=(OPENSKY_USERNAME, OPENSKY_PASSWORD), timeout=20)
         if resp.status_code == 200:
             return resp.json()
         else:
