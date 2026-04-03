@@ -15,11 +15,11 @@ BBOX = {
     "lomax": 150.0
 }
 
-@st.cache_data(ttl=10, show_spinner=False)
+@st.cache_data(ttl=30, show_spinner=False)
 def _fetch_opensky_data():
     url = "https://opensky-network.org/api/states/all"
     try:
-        resp = requests.get(url, auth=(OPENSKY_USERNAME, OPENSKY_PASSWORD), timeout=20)
+        resp = requests.get(url, params=BBOX, auth=(OPENSKY_USERNAME, OPENSKY_PASSWORD), timeout=10)
         if resp.status_code == 200:
             return resp.json()
         else:
