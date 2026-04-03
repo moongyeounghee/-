@@ -3,8 +3,8 @@ import time
 import pandas as pd
 import streamlit as st
 
-OPENSKY_USERNAME = "moongyeounghee@gmail.com"
-OPENSKY_PASSWORD = "134613ab!!"
+OPENSKY_USERNAME = "moongyeounghee@gmail.com-api-client"
+OPENSKY_PASSWORD = "KAJR6qynO7oJTuC9KiZD9NdbMiF3kksE"
 
 # 대륙 반경 확장 (아시아 전역 - 러시아에서 인도네시아까지)
 # lamin, lomin, lamax, lomax
