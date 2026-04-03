@@ -1654,8 +1654,6 @@ elif st.session_state.mode == "ARRIVAL":
 
     # --- OpenSky Network 실시간 데이터 결합 ---
     import opensky_api
-    import importlib
-    importlib.reload(opensky_api) # 서버 재시작 없이 강제 새로고침
     live_flight = None
     if arr_flight.get("편명"):
         live_flight = opensky_api.get_target_flight_status(arr_flight["편명"])

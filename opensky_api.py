@@ -1,6 +1,7 @@
 import requests
 import time
 import pandas as pd
+import streamlit as st
 
 OPENSKY_USERNAME = "moongyeounghee@gmail.com-api-client"
 OPENSKY_PASSWORD = "AAg2XQ28ED5jf9gt04MDCZML6g6rRlTK"
@@ -14,34 +15,22 @@ BBOX = {
     "lomax": 150.0
 }
 
-# Caching logic
-_cache_time = 0
-_cache_data = None
-CACHE_TTL = 10 # 10 seconds
+@st.cache_data(ttl=10, show_spinner=False)
+def _fetch_opensky_data():
+    url = "https://opensky-network.org/api/states/all"
+    try:
+        resp = requests.get(url, auth=(OPENSKY_USERNAME, OPENSKY_PASSWORD), timeout=20)
+        if resp.status_code == 200:
+            return resp.json()
+        else:
+            print(f"OpenSky API Error: {resp.status_code}")
+            return None
+    except Exception as e:
+        print(f"OpenSky API Exception: {e}")
+        return None
 
 def get_opensky_states(target_callsign=None):
-    global _cache_time, _cache_data
-    
-    now = time.time()
-    if _cache_data is not None and (now - _cache_time) < CACHE_TTL:
-        states = _cache_data
-    else:
-        url = "https://opensky-network.org/api/states/all"
-        # BBOX 제한 전면 해제 (전세계 글로벌 무제한 조회 모드 복구)
-        params = {}
-        try:
-            # 엄청난 양의 전세계 데이터(약 6MB)를 한 번에 받아오므로 타임아웃을 20초로 연장
-            resp = requests.get(url, params=params, auth=(OPENSKY_USERNAME, OPENSKY_PASSWORD), timeout=20)
-            if resp.status_code == 200:
-                _cache_data = resp.json()
-                _cache_time = now
-                states = _cache_data
-            else:
-                print(f"OpenSky API Error: {resp.status_code}")
-                return None
-        except Exception as e:
-            print(f"OpenSky API Exception: {e}")
-            return None
+    states = _fetch_opensky_data()
             
     if not states or "states" not in states or not states["states"]:
         return None
