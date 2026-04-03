@@ -174,7 +174,7 @@ def get_facilities_by_category(
             "location": (item.get("lcnm") or "").strip(),
             "hours": (item.get("servicetime") or "").strip(),
             "tel": (item.get("tel") or "").strip().strip("-"),
-            "duty_free": item.get("lcduty") == "Y",
+            "duty_free": (item.get("lcduty") == "Y") and (cat == "SHOPPING"),
             "terminal_id": mapped_term,
             "floor": (item.get("floorinfo") or "").strip(),
         })
