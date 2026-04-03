@@ -1843,7 +1843,7 @@ elif st.session_state.mode == "ARRIVAL":
                     if is_live:
                         st.markdown("<div style='text-align:right; font-size:0.9rem; color:#ff4b4b; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🔴 LIVE 추적 중</b></div>", unsafe_allow_html=True)
                     elif not is_live and 'origin_lat' in dir() and origin_lat is not None:
-                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#4A90E2; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🔵 항로 추정 중</b></div>", unsafe_allow_html=True)
+                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#FF8C00; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🟠 항로 추정 중</b></div>", unsafe_allow_html=True)
                     else:
                         st.markdown("<div style='text-align:right; font-size:0.9rem; color:#A0AEC0; padding-top:0.4rem; margin-bottom:0.5rem;'><b>⚪ 신호 없음</b></div>", unsafe_allow_html=True)
                     
@@ -1855,7 +1855,7 @@ elif st.session_state.mode == "ARRIVAL":
                 )
                 
                 map_df = pd.DataFrame([{"lat": lat, "lon": lon}])
-                dot_color = "[220, 20, 60, 255]" if is_live else "[74, 144, 226, 200]"
+                dot_color = "[220, 20, 60, 255]" if is_live else "[255, 140, 0, 240]"
                 layers = [pdk.Layer(
                     "ScatterplotLayer",
                     data=map_df,
