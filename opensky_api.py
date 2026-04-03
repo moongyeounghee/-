@@ -15,7 +15,7 @@ BBOX = {
     "lomax": 150.0
 }
 
-@st.cache_data(ttl=30, show_spinner=False)
+@st.cache_data(ttl=120, show_spinner=False)
 def _fetch_opensky_data():
     url = "https://opensky-network.org/api/states/all"
     try:
