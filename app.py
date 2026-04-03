@@ -21,7 +21,9 @@ import bus_api
 import taxi_api
 import railroad_api
 import facilities_api
+import opensky_api
 
+# ── API 호출 글로벌 캐싱 처리 (10초 자동 갱신 시 발생하는 전체 페이지 UI 멈춤 방지용) ──
 get_departure_congestion = st.cache_data(ttl=60)(get_departure_congestion)
 get_departure_flights = st.cache_data(ttl=60)(get_departure_flights)
 get_arrival_flights = st.cache_data(ttl=60)(get_arrival_flights)
@@ -1653,7 +1655,6 @@ elif st.session_state.mode == "ARRIVAL":
         arr_time_str = "N/A"
 
     # --- OpenSky Network 실시간 데이터 결합 ---
-    import opensky_api
     live_flight = None
     if arr_flight.get("편명"):
         live_flight = opensky_api.get_target_flight_status(arr_flight["편명"])
