@@ -48,7 +48,7 @@ def load_rl_models():
 # 페이지 기본 설정
 # ─────────────────────────────────────────────
 st.set_page_config(
-    page_title="AI-PORT 스마트 네비게이션",
+    page_title="AIRTIME 스마트 네비게이션",
     page_icon="🛫",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -733,7 +733,7 @@ def get_airline_name(flight_no: str) -> str:
 # ─────────────────────────────────────────────
 st.markdown("""
 <div class="hero-header">
-  <div class="hero-title">🛫 AI-PORT</div>
+  <div class="hero-title">🛫 AIRTIME</div>
   <div class="hero-sub">실시간 공항 스마트 네비게이션 · Powered by AI &amp; 공공 데이터</div>
   <div class="team-info">👨‍💻 &nbsp;<strong>조이름:</strong> 인하늘 &nbsp;|&nbsp; <strong>조원:</strong> 김고은, 김도혜, 문경희, 신주영</div>
 </div>
