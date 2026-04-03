@@ -80,18 +80,36 @@ def get_opensky_states(target_callsign=None):
     return pd.DataFrame(results)
 
 IATA_TO_ICAO = {
-    "KE": "KAL", "OZ": "AAR", "7C": "JJA", "TW": "TWB", 
+    # 한국 항공사
+    "KE": "KAL", "OZ": "AAR", "7C": "JJA", "TW": "TWB",
     "LJ": "JNA", "BX": "ABL", "RS": "ASV", "ZE": "ESR",
+    # 미국
     "DL": "DAL", "AA": "AAL", "UA": "UAL", "AC": "ACA",
+    # 아시아
     "CX": "CPA", "SQ": "SIA", "TG": "THA", "VN": "HVN",
-    "PR": "PAL", "5J": "CEB", "VJ": "VJC"
+    "PR": "PAL", "5J": "CEB", "VJ": "VJC", "AK": "AXM",
+    "MH": "MAS", "GA": "GIA", "CI": "CAL", "BR": "EVA",
+    "NH": "ANA", "JL": "JAL", "MM": "APJ", "GK": "JJP",
+    # 중국
+    "CA": "CCA", "MU": "CES", "CZ": "CSN", "HU": "CHH",
+    "3U": "CSC", "ZH": "CSZ", "9C": "CQH", "HO": "DKH",
+    # 유럽
+    "LH": "DLH", "AF": "AFR", "KL": "KLM", "BA": "BAW",
+    "EK": "UAE", "QR": "QTR", "EY": "ETD", "TK": "THY",
+    # 아프리카/기타
+    "ET": "ETH",  # 에티오피아항공
+    "QF": "QFA",  # 콴타스
+    "VS": "VIR",  # 버진애틀랜틱
+    "AM": "AMX",  # 아에로멕시코
+    "TN": "THD",  # 에어타히티누이
 }
 
 def iata_to_icao_callsign(iata_flight_num):
     import re
     if not iata_flight_num: return ""
     iata_flight_num = str(iata_flight_num).strip().upper()
-    match = re.match(r"^([A-Z0-9]{2})(\d+)$", iata_flight_num)
+    # ET673Y → airline=ET, num=673 (끝의 알파벳 좌석클래스 코드 제거)
+    match = re.match(r"^([A-Z0-9]{2})(\d+)[A-Z]?$", iata_flight_num)
     if match:
         airline, num = match.groups()
         icao = IATA_TO_ICAO.get(airline, airline)
