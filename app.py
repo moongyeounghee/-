@@ -1760,53 +1760,12 @@ elif st.session_state.mode == "ARRIVAL":
                     if alt_m: alt_text = f"{int(alt_m)}m"
                     if vel_ms: vel_text = f"{int(vel_ms * 3.6)}km/h"
                 else:
-                    # OpenSky 음영지역(해양, 해외오지)이거나 API 지연 시: 추정 위치 시뮬레이션
-                    # 대표 출발지 위경도 딕셔너리 (간소화)
-                    CITY_COORDS = {
-                        "도쿄": (35.76, 140.38), "오사카": (34.43, 135.23), "후쿠오카": (33.58, 130.45),
-                        "타이베이": (25.07, 121.23), "방콕": (13.68, 100.74), "싱가포르": (1.36, 103.99),
-                        "홍콩": (22.30, 113.91), "마카오": (22.14, 113.59), "상하이": (31.14, 121.80),
-                        "베이징": (40.08, 116.59), "다낭": (16.05, 108.19), "호치민": (10.81, 106.66),
-                        "마닐라": (14.50, 121.01), "세부": (10.30, 123.97), "괌": (13.48, 144.79),
-                        "사이판": (15.11, 145.72), "하와이": (21.32, -157.92), "로스앤젤레스": (33.94, -118.40),
-                        "뉴욕": (40.64, -73.77), "런던": (51.47, -0.45), "파리": (49.00, 2.54),
-                        "프랑크푸르트": (50.03, 8.57), "시드니": (-33.93, 151.17)
-                    }
-                    origin_lat, origin_lon = 0.0, 0.0
-                    found_origin = False
-                    if origin_name:
-                        for city, coords in CITY_COORDS.items():
-                            if city in origin_name:
-                                origin_lat = coords[0]
-                                origin_lon = coords[1]
-                                found_origin = True
-                                break
-                    
-                    # 예측 남은 시간 (기본 180분으로 가정)
-                    safe_mins = max(0, mins_left) if mins_left else 60
-                    
-                    if found_origin:
-                        # 대략적인 총 비행시간 추정치 (단순 거리 비례)
-                        dist = math.sqrt((37.46 - origin_lat)**2 + (126.44 - origin_lon)**2)
-                        total_est_mins = max(safe_mins + 10, int(dist * 12)) 
-                        
-                        # 진행률: 100% (도착) - 남은비율
-                        progress = 1.0 - (safe_mins / total_est_mins)
-                        progress = max(0.0, min(1.0, progress))
-                        
-                        lat = origin_lat + (37.46 - origin_lat) * progress
-                        lon = origin_lon + (126.44 - origin_lon) * progress
-                        alt_text = f"{(int(10000 * (1 - abs(progress-0.5)*2)))}m (추정)" if progress > 0.1 else "상승 중"
-                        vel_text = "850km/h (추정)"
-                    else:
-                        # 출발지 미상이면 남은 시간에 따라 인위적으로 서해/남해 상공에 배치
-                        progress = 1.0 - min(1.0, safe_mins / 180.0)
-                        lat = 32.0 + (37.46 - 32.0) * progress
-                        lon = 124.0 + (126.44 - 124.0) * progress
-                        alt_text = "위치 추정 중"
-                        vel_text = "추정 중"
-                
-                map_df = pd.DataFrame([{"lat": lat, "lon": lon}])
+                    # 라이브 위치 아니면 렌더링 안 함 (예상 위치 끄기)
+                    lat = 37.46
+                    lon = 126.44
+                    alt_text = "조회 불가"
+                    vel_text = "조회 불가"
+                    safe_mins = 60
                 
                 cr1, cr2 = st.columns([2, 1])
                 with cr1:
@@ -1815,22 +1774,30 @@ elif st.session_state.mode == "ARRIVAL":
                     if is_live:
                         st.markdown("<div style='text-align:right; font-size:0.9rem; color:#ff4b4b; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🔴 LIVE 추적 중</b></div>", unsafe_allow_html=True)
                     else:
-                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#E6A800; padding-top:0.4rem; margin-bottom:0.5rem;'><b>🟡 ADS-B 음영 (AI 추정 위치)</b></div>", unsafe_allow_html=True)
+                        st.markdown("<div style='text-align:right; font-size:0.9rem; color:#A0AEC0; padding-top:0.4rem; margin-bottom:0.5rem;'><b>⚪ 레이더 신호 미수신</b></div>", unsafe_allow_html=True)
                     
                 view_state = pdk.ViewState(
                     latitude=lat,
                     longitude=lon,
-                    zoom=4 if safe_mins > 60 else 6,
+                    zoom=4 if is_live else 6,
                     pitch=40
                 )
-                layer = pdk.Layer(
-                    "ScatterplotLayer",
-                    data=map_df,
-                    get_position="[lon, lat]",
-                    get_fill_color="[220, 20, 60, 255]" if is_live else "[0, 85, 255, 255]",
-                    get_radius=30000 if safe_mins > 60 else 15000,
-                )
-                st.pydeck_chart(pdk.Deck(map_style='https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json', layers=[layer], initial_view_state=view_state))
+                
+                layers = []
+                if is_live:
+                    map_df = pd.DataFrame([{"lat": lat, "lon": lon}])
+                    layers.append(pdk.Layer(
+                        "ScatterplotLayer",
+                        data=map_df,
+                        get_position="[lon, lat]",
+                        get_fill_color="[220, 20, 60, 255]",
+                        get_radius=30000 if safe_mins > 60 else 15000,
+                    ))
+                
+                if not is_live:
+                    st.info("ℹ️ 현재 실시간 위성(ADS-B) 망에 위치가 잡히지 않는 특수 비행기입니다. (예: 공동운항 비행기, 해양 음영구역 등)")
+
+                st.pydeck_chart(pdk.Deck(map_style='https://basemaps.cartocdn.com/gl/voyager-nolabels-gl-style/style.json', layers=layers, initial_view_state=view_state))
                 
                 # st.fragment 내부 버튼: 누르면 이 영역만 새로고침됨!
                 if st.button("🔄 실시간 레이더 위치 새로고침", use_container_width=True, key="btn_radar_refresh"):
